@@ -3,6 +3,7 @@ import requests
 import json
 from mockserver import MockServer
 from api_stub import ApiStub
+import time
 
 class TestMockServer(unittest.TestCase):
 
@@ -11,6 +12,9 @@ class TestMockServer(unittest.TestCase):
         self.server = MockServer(host = "localhost", port = 5001)
         self.server.daemon = True
         self.server.start()
+        # adding little sleep as start & shutdown mock server very often creates
+        # connection problems
+        time.sleep(0.25)
         self.apiStub = ApiStub()
 
     def test_mock_with_json_serializable(self):

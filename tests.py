@@ -17,8 +17,37 @@ class TestMockServer(unittest.TestCase):
 
         response = requests.get(self.server.url + "/mobiles?q=samsung")
         self.assertEqual(200, response.status_code)
-        # self.assertIn('mobiles', response.json())
-        # self.assertEqual(["samsung", "apple"], response.json()['mobiles'])
+        self.assertEqual([{'model': 'galaxy_a8', 'price': 52000}, {'model': 'galaxy_s9', 'price': 54000}], response.json())
+
+        # demonstrating on how to set response & code from test
+        resp = [{'model': 'galaxy_a7', 'price': 19000}, {'model': 'galaxy_s9+', 'price': 24000}]
+        self.server.onSearchRequest(response = {"message": resp, "code": 200})
+        response = requests.get(self.server.url + "/mobiles?q=samsung")
+        self.assertEqual(resp, response.json())
+        self.assertEqual(200, response.status_code)
+
+        # resetting the response set
+        self.server.onSearchRequest(response = None)
+
+        # demonstrating on how to set callbackFunction for a method
+        def onSearchRequestCallback(**kwargs):
+
+            search = kwargs.get('request').args.get("q")
+            models = []
+            if search.lower() == "samsung":
+                models = [{"model": "j7", "price": 80000}, {"model": "j6", "price": 9000}]
+            elif search.lower() == "apple":
+                models = [{"model": "6", "price": 12000}, {"model": "6+", "price": 14000}]
+
+            return json.dumps(models), 200
+
+        self.server.onSearchRequest(callback_func = onSearchRequestCallback)
+        response = requests.get(self.server.url + "/mobiles?q=apple")
+        self.assertEqual([{"model": "6", "price": 12000}, {"model": "6+", "price": 14000}], response.json())
+        self.assertEqual(200, response.status_code)
+
+        # resetting the callback_func set
+        self.server.onSearchRequest(callback_func = None)
 
     def test_url_segement_params(self):
 
@@ -27,6 +56,16 @@ class TestMockServer(unittest.TestCase):
 
         response = requests.get(self.server.url + "/mobiles/samsung/galaxy_a8")
         self.assertEqual({"price": 52000}, response.json())
+
+        # demonstrating on how to set response & code from test
+        resp = {"price": 12000}
+        self.server.onMobileModelInfo(response = {"message": resp, "code": 200})
+        response = requests.get(self.server.url + "/mobiles/samsung/j7")
+        self.assertEqual(resp, response.json())
+        self.assertEqual(200, response.status_code)
+
+        # resetting the response set
+        self.server.onMobileModelInfo(response = None)
 
     def test_post_read_request_body(self):
 

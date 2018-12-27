@@ -1,5 +1,5 @@
 import json
-from mockserver import MockServer
+from mockserver import MockServer, MockWrapper
 import time
 
 class ApiMock(MockServer):
@@ -9,14 +9,13 @@ class ApiMock(MockServer):
         super().__init__(host = host, port = port)
         self.initialise()
 
+    @MockWrapper
     def onMobileModelInfo(self, **kwargs):
         """
         callback function for the route GET: /mobiles/<manufacturer>/<model>
         """
 
         # demonstrates how to read path segment parameter /mobiles/samsung/galaxy_a8
-        print("Mobile manufacturer given: '{0}'".format(kwargs["manufacturer"]))
-        print("Mobile model given: '{0}'".format(kwargs["model"]))
 
         priceJson = {"message": "unknown model"}
         # logic to return price based on manufacturer and model given
@@ -32,31 +31,19 @@ class ApiMock(MockServer):
         # default status code will be 200
         return json.dumps(priceJson)
 
+    @MockWrapper
     def onMobileManufacturerRequest(self, **kwargs):
         """
         callback function for the route GET: /mobiles/manufacturers
         """
 
-        # getting response and returning it if that was set is just a demonstration to show that also we
-        #  can do on top of call back
-        if kwargs.get("response"):
-            self.mobileManufacturerResponse = kwargs.get("response")
-            return
+        return json.dumps(["samsung", "apple", "mi"]), 200
 
-        # this is bit hacky again but can be used if it's really really needed
-        # say if a specific test needs to return specific response which is not done in call back we can do like this
-        if hasattr(self, "mobileManufacturerResponse"):
-            response = self.mobileManufacturerResponse
-            del self.mobileManufacturerResponse
-            return json.dumps(response["message"]), response["code"]
-
-        return json.dumps(["samsung", "apple", "mi"])
-
+    @MockWrapper
     def onSearchRequest(self, **kwargs):
         """
         callback function for the route GET: /mobiles
         """
-
 
         # demonstrates how to read url params /mobiles?search=samsung
         search = kwargs.get('request').args.get("q")
@@ -69,15 +56,16 @@ class ApiMock(MockServer):
         # default status code will be 200
         return json.dumps(models)
 
+    @MockWrapper
     def onMobilesPost(self, **kwargs):
         """
         callback function for the route POST: /mobiles
         """
 
-        print("Request body: ", kwargs.get('request').get_json())
         code = 201
         return json.dumps({"message": "successfully created"}), code
 
+    @MockWrapper
     def bad_request(self, **kwargs):
         """
         callback function for the route GET: /tablets
@@ -92,35 +80,18 @@ class ApiMock(MockServer):
         self.daemon = True
         self.start()
 
-        # adding little sleep as start & shutdown mock server very often creates
-        # connection problems
-        time.sleep(0.25)
+        # adding little sleep as start & shutdown mock server very often creates connection problems
+        time.sleep(0.5)
 
         # putting this code inside run() doesn't work
         # requires callback function to prepare response which needs to be returned
-        self.add_callback_response(url = "/mobiles/<manufacturer>/<model>", callback = self.onMobileModelInfo,
+        self.add_response_callback(url = "/mobiles/<manufacturer>/<model>", callback = self.onMobileModelInfo,
                                    methods = ["GET"])
 
-        self.add_callback_response(url = "/mobiles/manufacturers", callback = self.onMobileManufacturerRequest,
+        self.add_response_callback(url = "/mobiles/manufacturers", callback = self.onMobileManufacturerRequest,
                                    methods = ["GET"])
 
-        self.add_callback_response(url = "/mobiles", callback = self.onSearchRequest, methods = ["GET"])
+        self.add_response_callback(url = "/mobiles", callback = self.onSearchRequest, methods = ["GET"])
 
-        self.add_callback_response(url = "/mobiles", callback = self.onMobilesPost, methods = ["post"])
-        self.add_callback_response(url = "/tablets", callback = self.bad_request, methods = ["GET"])
-
-
-if __name__ == '__main__':
-
-    stubServer = ApiStub(host = "127.0.0.1", port = 5431)
-    stubServer.daemon = True
-    stubServer.start()
-
-    # initialise all callback methods and routes here...
-    import time
-
-    try:
-        while True:
-            time.sleep(3)
-    except:
-        stubServer.shutdown_server()
+        self.add_response_callback(url = "/mobiles", callback = self.onMobilesPost, methods = ["post"])
+        self.add_response_callback(url = "/tablets", callback = self.bad_request, methods = ["GET"])

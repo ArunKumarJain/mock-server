@@ -1,13 +1,17 @@
 import json
 from mockserver import MockServer
 
-class ApiStub(MockServer):
+class ApiMock(MockServer):
 
     def __init__(self, host = "127.0.0.1", port = 5432):
 
         super().__init__(host = host, port = port)
+        self.initialise()
 
     def onMobileModelInfo(self, **kwargs):
+        """
+        callback function for the route GET: /mobiles/<manufacturer>/<model>
+        """
 
         # demonstrates how to read path segment parameter /mobiles/samsung/galaxy_a8
         print("Mobile manufacturer given: '{0}'".format(kwargs["manufacturer"]))
@@ -27,16 +31,20 @@ class ApiStub(MockServer):
         # default status code will be 200
         return json.dumps(priceJson)
 
-    def onMobileManufacturerRequest(self, response = None, **kwargs):
+    def onMobileManufacturerRequest(self, **kwargs):
+        """
+        callback function for the route GET: /mobiles/manufacturers
+        """
 
         # getting response and returning it if that was set is just a demonstration to show that also we
         #  can do on top of call back
-        if response:
-            self.mobileManufacturerResponse = response
+        if kwargs.get("response"):
+            self.mobileManufacturerResponse = kwargs.get("response")
+            return
 
         # this is bit hacky again but can be used if it's really really needed
         # say if a specific test needs to return specific response which is not done in call back we can do like this
-        if kwargs and hasattr(self, "mobileManufacturerResponse"):
+        if hasattr(self, "mobileManufacturerResponse"):
             response = self.mobileManufacturerResponse
             del self.mobileManufacturerResponse
             return json.dumps(response["message"]), response["code"]
@@ -44,6 +52,10 @@ class ApiStub(MockServer):
         return json.dumps(["samsung", "apple", "mi"])
 
     def onSearchRequest(self, **kwargs):
+        """
+        callback function for the route GET: /mobiles
+        """
+
 
         # demonstrates how to read url params /mobiles?search=samsung
         search = kwargs.get('request').args.get("q")
@@ -57,12 +69,18 @@ class ApiStub(MockServer):
         return json.dumps(models)
 
     def onMobilesPost(self, **kwargs):
+        """
+        callback function for the route POST: /mobiles
+        """
 
         print("Request body: ", kwargs.get('request').get_json())
         code = 201
         return json.dumps({"message": "successfully created"}), code
 
     def bad_request(self, **kwargs):
+        """
+        callback function for the route GET: /tablets
+        """
 
         code = 400
         msg = {"message": "error message"}
@@ -81,7 +99,7 @@ class ApiStub(MockServer):
         self.add_callback_response(url = "/mobiles", callback = self.onSearchRequest, methods = ["GET"])
 
         self.add_callback_response(url = "/mobiles", callback = self.onMobilesPost, methods = ["post"])
-        self.add_callback_response(url = "/tablets", callback = self.bad_request)
+        self.add_callback_response(url = "/tablets", callback = self.bad_request, methods = ["GET"])
 
 
 if __name__ == '__main__':
@@ -91,7 +109,6 @@ if __name__ == '__main__':
     stubServer.start()
 
     # initialise all callback methods and routes here...
-    stubServer.initialise()
     import time
 
     try:

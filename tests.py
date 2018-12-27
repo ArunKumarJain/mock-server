@@ -1,17 +1,16 @@
 import unittest
 import requests
 import json
-from api_stub import ApiStub
+from api_stub import ApiMock
 import time
 
 class TestMockServer(unittest.TestCase):
 
     def setUp(self):
 
-        self.server = ApiStub(host = "localhost", port = 5001)
+        self.server = ApiMock(host = "localhost", port = 5001)
         self.server.daemon = True
         self.server.start()
-        self.server.initialise()
 
         # adding little sleep as start & shutdown mock server very often creates
         # connection problems

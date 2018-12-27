@@ -1,5 +1,6 @@
 import json
 from mockserver import MockServer
+import time
 
 class ApiMock(MockServer):
 
@@ -87,6 +88,13 @@ class ApiMock(MockServer):
         return json.dumps(msg), code
 
     def initialise(self):
+
+        self.daemon = True
+        self.start()
+
+        # adding little sleep as start & shutdown mock server very often creates
+        # connection problems
+        time.sleep(0.25)
 
         # putting this code inside run() doesn't work
         # requires callback function to prepare response which needs to be returned

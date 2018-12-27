@@ -9,12 +9,6 @@ class TestMockServer(unittest.TestCase):
     def setUp(self):
 
         self.server = ApiMock(host = "localhost", port = 5001)
-        self.server.daemon = True
-        self.server.start()
-
-        # adding little sleep as start & shutdown mock server very often creates
-        # connection problems
-        time.sleep(0.25)
 
     def test_url_params(self):
 

@@ -1,46 +1,77 @@
 import unittest
 import requests
 import json
-from mockserver import MockServer
-from api_stub import ApiStub
+from api_stub import ApiMock
 import time
 
 class TestMockServer(unittest.TestCase):
 
     def setUp(self):
 
-        self.server = MockServer(host = "localhost", port = 5001)
-        self.server.daemon = True
-        self.server.start()
-        # adding little sleep as start & shutdown mock server very often creates
-        # connection problems
-        time.sleep(0.25)
-        self.apiStub = ApiStub()
+        self.server = ApiMock(host = "localhost", port = 5001)
 
-    def test_mock_with_json_serializable(self):
+    def test_url_params(self):
 
-        # demonstrate how to create a stub for get API and without a callback function
+        # example of how to create a stub for get API and without a callback function
         # static responses for specific routes can be done like this
 
-        self.server.add_json_response(url = "/mobiles", serializable = dict(mobiles = ["samsung", "apple"]))
-        response = requests.get(self.server.url + "/mobiles")
+        response = requests.get(self.server.url + "/mobiles?q=samsung")
         self.assertEqual(200, response.status_code)
-        self.assertIn('mobiles', response.json())
-        self.assertEqual(["samsung", "apple"], response.json()['mobiles'])
+        self.assertEqual([{'model': 'galaxy_a8', 'price': 52000}, {'model': 'galaxy_s9', 'price': 54000}], response.json())
 
-    def test_mock_with_callback(self):
+        # example of how to set response & code from test
+        # until response is reset, for all future requests the same response will be returned
+        resp = [{'model': 'galaxy_a7', 'price': 19000}, {'model': 'galaxy_s9+', 'price': 24000}]
+        self.server.onSearchRequest(response = {"message": resp, "code": 200})
+        response = requests.get(self.server.url + "/mobiles?q=samsung")
+        self.assertEqual(resp, response.json())
+        self.assertEqual(200, response.status_code)
 
-        # demonstrate how to create a stub for get API and read the path segment parameters
+        # resetting the response set
+        self.server.onSearchRequest(response = None)
+
+        # example of how to set callbackFunction for a method
+        # until callbackFunction is reset, for all future requests the callbackFunction will be called
+        def onSearchRequestCallback(**kwargs):
+
+            search = kwargs.get('request').args.get("q")
+            models = []
+            if search.lower() == "samsung":
+                models = [{"model": "j7", "price": 80000}, {"model": "j6", "price": 9000}]
+            elif search.lower() == "apple":
+                models = [{"model": "6", "price": 12000}, {"model": "6+", "price": 14000}]
+
+            return json.dumps(models), 200
+
+        self.server.onSearchRequest(callback_func = onSearchRequestCallback)
+        response = requests.get(self.server.url + "/mobiles?q=apple")
+        self.assertEqual([{"model": "6", "price": 12000}, {"model": "6+", "price": 14000}], response.json())
+        self.assertEqual(200, response.status_code)
+
+        # resetting the callback_func set
+        self.server.onSearchRequest(callback_func = None)
+
+    def test_url_segement_params(self):
+
+        # example of how to create a stub for get API and read the path segment parameters
         # response based on the parameters can be generated in callback function
 
-        self.server.add_callback_response(url = "/mobiles/<manufacturer>/<model>", callback = self.apiStub.mobile_price)
         response = requests.get(self.server.url + "/mobiles/samsung/galaxy_a8")
         self.assertEqual({"price": 52000}, response.json())
 
-    def test_read_request_body(self):
+        # example of how to set response & code from test
+        resp = {"price": 12000}
+        self.server.onMobileModelInfo(response = {"message": resp, "code": 200})
+        response = requests.get(self.server.url + "/mobiles/samsung/j7")
+        self.assertEqual(resp, response.json())
+        self.assertEqual(200, response.status_code)
 
-        # demonstrate how to create a stub for post API and read the json sent in request body
-        self.server.add_callback_response(url = "/mobiles", callback = self.apiStub.post, methods = ["post"])
+        # resetting the response set
+        self.server.onMobileModelInfo(response = None)
+
+    def test_post_read_request_body(self):
+
+        # example of how to create a stub for post API and read the json sent in request body
         jsonBody = [{"manufacturer": "red-mi", "models": [{"model": "a8", "price": "16000"},
                                                           {"model": "6pro", "price": "11000"}]}]
 
@@ -50,13 +81,10 @@ class TestMockServer(unittest.TestCase):
 
     def test_bad_request(self):
 
-        self.server.add_callback_response(url = "/tablets", callback=self.apiStub.bad_request)
-
         response = requests.get(self.server.url + "/tablets")
         self.assertEqual(400, response.status_code)
         # intentionally creating a assertion failure
         self.assertEqual({"message": "error message"}, response.json())
-
 
     def tearDown(self):
 

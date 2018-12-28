@@ -13,36 +13,36 @@ class MockWrapper:
 
     def __call__(self, *args, **kwargs):
 
-        response = "{0}Response".format(self.func.__name__)
-        code = "{0}ResponseCode".format(self.func.__name__)
-        callbackFunc = "{0}CallbackFunc".format(self.func.__name__)
+        responseAttrName = "{0}Response".format(self.func.__name__)
+        codeAttrName = "{0}ResponseCode".format(self.func.__name__)
+        callbackFuncAttrName = "{0}CallbackFunc".format(self.func.__name__)
 
         if "response" in kwargs:
             if kwargs.get("response"):
-                setattr(self, response, kwargs.get("response").get("message", {}))
-                setattr(self, code, kwargs.get("response").get("code", 200))
+                setattr(self, responseAttrName, kwargs.get("response").get("message", {}))
+                setattr(self, codeAttrName, kwargs.get("response").get("code", 200))
             else:
                 # if response is given as None delete the attr that was set
-                delattr(self, response)
-                delattr(self, code)
+                delattr(self, responseAttrName)
+                delattr(self, codeAttrName)
 
             return
 
         if "callback_func" in kwargs:
             if kwargs.get("callback_func"):
-                setattr(self, callbackFunc, kwargs.get("callback_func"))
+                setattr(self, callbackFuncAttrName, kwargs.get("callback_func"))
             else:
                 # if callback_func is given as None delete the attr that was set
-                delattr(self, callbackFunc)
+                delattr(self, callbackFuncAttrName)
 
             return
 
         if kwargs.get("request"):
-            if hasattr(self, response):
-                return json.dumps(getattr(self, response)), getattr(self, code)
-            if hasattr(self, callbackFunc):
-                response = getattr(self, callbackFunc)(*args, **kwargs)
-                return response
+            if hasattr(self, responseAttrName):
+                return json.dumps(getattr(self, responseAttrName)), getattr(self, codeAttrName)
+            if hasattr(self, callbackFuncAttrName):
+                responseAttrName = getattr(self, callbackFuncAttrName)(*args, **kwargs)
+                return responseAttrName
 
         return self.func(self, *args, **kwargs)
 

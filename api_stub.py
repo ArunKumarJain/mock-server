@@ -15,7 +15,7 @@ class ApiMock(MockServer):
         callback function for the route GET: /mobiles/<manufacturer>/<model>
         """
 
-        # demonstrates how to read path segment parameter /mobiles/samsung/galaxy_a8
+        # example of how to read path segment parameter /mobiles/samsung/galaxy_a8
 
         priceJson = {"message": "unknown model"}
         # logic to return price based on manufacturer and model given
@@ -45,7 +45,7 @@ class ApiMock(MockServer):
         callback function for the route GET: /mobiles
         """
 
-        # demonstrates how to read url params /mobiles?search=samsung
+        # example of how to read url params /mobiles?search=samsung
         search = kwargs.get('request').args.get("q")
         models = []
         if search.lower() == "samsung":

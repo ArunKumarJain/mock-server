@@ -22,6 +22,7 @@ class MockWrapper:
                 setattr(self, response, kwargs.get("response").get("message", {}))
                 setattr(self, code, kwargs.get("response").get("code", 200))
             else:
+                # if response is given as None delete the attr that was set
                 delattr(self, response)
                 delattr(self, code)
 
@@ -31,6 +32,7 @@ class MockWrapper:
             if kwargs.get("callback_func"):
                 setattr(self, callbackFunc, kwargs.get("callback_func"))
             else:
+                # if callback_func is given as None delete the attr that was set
                 delattr(self, callbackFunc)
 
             return

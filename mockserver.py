@@ -4,47 +4,44 @@ from flask import jsonify, Flask, request
 from threading import Thread
 import functools
 
-class MockWrapper:
+def mockWrapper(func):
+    @functools.wraps(func)
+    def func_wrapper(*args, **kwargs):
 
-    def __init__(self, func):
-
-        functools.update_wrapper(self, func)
-        self.func = func
-
-    def __call__(self, *args, **kwargs):
-
-        responseAttrName = "{0}Response".format(self.func.__name__)
-        codeAttrName = "{0}ResponseCode".format(self.func.__name__)
-        callbackFuncAttrName = "{0}CallbackFunc".format(self.func.__name__)
+        responseAttrName = "{0}Response".format(func.__name__)
+        codeAttrName = "{0}ResponseCode".format(func.__name__)
+        callbackFuncAttrName = "{0}CallbackFunc".format(func.__name__)
 
         if "response" in kwargs:
             if kwargs.get("response"):
-                setattr(self, responseAttrName, kwargs.get("response").get("message", {}))
-                setattr(self, codeAttrName, kwargs.get("response").get("code", 200))
+                setattr(func, responseAttrName, kwargs.get("response").get("message", {}))
+                setattr(func, codeAttrName, kwargs.get("response").get("code", 200))
             else:
                 # if response is given as None delete the attr that was set
-                delattr(self, responseAttrName)
-                delattr(self, codeAttrName)
+                delattr(func, responseAttrName)
+                delattr(func, codeAttrName)
 
             return
 
         if "callback_func" in kwargs:
             if kwargs.get("callback_func"):
-                setattr(self, callbackFuncAttrName, kwargs.get("callback_func"))
+                setattr(func, callbackFuncAttrName, kwargs.get("callback_func"))
             else:
                 # if callback_func is given as None delete the attr that was set
-                delattr(self, callbackFuncAttrName)
+                delattr(func, callbackFuncAttrName)
 
             return
 
         if kwargs.get("request"):
-            if hasattr(self, responseAttrName):
-                return json.dumps(getattr(self, responseAttrName)), getattr(self, codeAttrName)
-            if hasattr(self, callbackFuncAttrName):
-                responseAttrName = getattr(self, callbackFuncAttrName)(*args, **kwargs)
+            if hasattr(func, responseAttrName):
+                return json.dumps(getattr(func, responseAttrName)), getattr(func, codeAttrName)
+            if hasattr(func, callbackFuncAttrName):
+                responseAttrName = getattr(func, callbackFuncAttrName)(*args, **kwargs)
                 return responseAttrName
 
-        return self.func(self, *args, **kwargs)
+        return func(*args, **kwargs)
+
+    return func_wrapper
 
 class MockServer(Thread):
 

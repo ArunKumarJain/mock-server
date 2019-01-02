@@ -1,7 +1,7 @@
 import unittest
 import requests
 import json
-from api_stub import ApiMock
+from api_mock import ApiMock
 import time
 
 class TestMockServer(unittest.TestCase):
@@ -32,8 +32,7 @@ class TestMockServer(unittest.TestCase):
 
         # example of how to set callbackFunction for a method
         # until callbackFunction is reset, for all future requests the callbackFunction will be called
-        def onSearchRequestCallback(**kwargs):
-
+        def onSearchRequestCallback(*args, **kwargs):
             search = kwargs.get('request').args.get("q")
             models = []
             if search.lower() == "samsung":

@@ -1,5 +1,5 @@
 import json
-from mockserver import MockServer, MockWrapper
+from mockserver import MockServer, mockWrapper
 import time
 
 class ApiMock(MockServer):
@@ -9,14 +9,13 @@ class ApiMock(MockServer):
         super().__init__(host = host, port = port)
         self.initialise()
 
-    @MockWrapper
+    @mockWrapper
     def onMobileModelInfo(self, **kwargs):
         """
         callback function for the route GET: /mobiles/<manufacturer>/<model>
         """
 
         # example of how to read path segment parameter /mobiles/samsung/galaxy_a8
-
         priceJson = {"message": "unknown model"}
         # logic to return price based on manufacturer and model given
         if kwargs["manufacturer"].lower() == "samsung":
@@ -31,7 +30,7 @@ class ApiMock(MockServer):
         # default status code will be 200
         return json.dumps(priceJson)
 
-    @MockWrapper
+    @mockWrapper
     def onMobileManufacturerRequest(self, **kwargs):
         """
         callback function for the route GET: /mobiles/manufacturers
@@ -39,7 +38,7 @@ class ApiMock(MockServer):
 
         return json.dumps(["samsung", "apple", "mi"]), 200
 
-    @MockWrapper
+    @mockWrapper
     def onSearchRequest(self, **kwargs):
         """
         callback function for the route GET: /mobiles
@@ -56,7 +55,7 @@ class ApiMock(MockServer):
         # default status code will be 200
         return json.dumps(models)
 
-    @MockWrapper
+    @mockWrapper
     def onMobilesPost(self, **kwargs):
         """
         callback function for the route POST: /mobiles
@@ -65,7 +64,7 @@ class ApiMock(MockServer):
         code = 201
         return json.dumps({"message": "successfully created"}), code
 
-    @MockWrapper
+    @mockWrapper
     def bad_request(self, **kwargs):
         """
         callback function for the route GET: /tablets

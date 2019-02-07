@@ -12,7 +12,10 @@ logging.getLogger("urllib3").propagate = False
 
 def mockWrapper(func):
     @functools.wraps(func)
-    def func_wrapper(*args, **kwargs):
+    def func_wrapper(inst, *args, **kwargs):
+
+        inst.logger.debug("Url: '{}'\nMethod: '{}'\nHeaders: '{}'\ndata: {}\n".
+                          format(request.path, request.method, request.headers, request.get_data()))
 
         responseAttrName = "{0}Response".format(func.__name__)
         codeAttrName = "{0}ResponseCode".format(func.__name__)
@@ -45,7 +48,9 @@ def mockWrapper(func):
                 responseAttrName = getattr(func, callbackFuncAttrName)(*args, **kwargs)
                 return responseAttrName
 
-        return func(*args, **kwargs)
+        resp = func(inst, *args, **kwargs)
+        inst.logger.debug("Response: {}\n{}\n".format(resp, str('-' * 120)))
+        return resp
 
     return func_wrapper
 

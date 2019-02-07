@@ -1,8 +1,14 @@
+import os
 import json
 import requests
 from flask import jsonify, Flask, request
 from threading import Thread
 import functools
+import logging
+from logging.handlers import RotatingFileHandler
+
+logging.getLogger("werkzeug").propagate = False
+logging.getLogger("urllib3").propagate = False
 
 def mockWrapper(func):
     @functools.wraps(func)
@@ -45,7 +51,7 @@ def mockWrapper(func):
 
 class MockServer(Thread):
 
-    def __init__(self, host = "127.0.0.1", port = 5432):
+    def __init__(self,  host = "127.0.0.1", port = 5432, logDir = ".", logFileName = "mockserver"):
         """
         Parameters:
             (str) host: give 0.0.0.0 to have server available externally. Default is 127.0.0.1
@@ -53,6 +59,7 @@ class MockServer(Thread):
         """
 
         super().__init__()
+        self._initialise_logger(logDir = logDir, logFileName = logFileName)
         self.port = port
         self.host = host
         self.url = "http://{0}:{1}".format(host, port)
@@ -65,6 +72,18 @@ class MockServer(Thread):
             raise RuntimeError('Not running the development server')
         request.environ['werkzeug.server.shutdown']()
         return 'Server shutting down...'
+
+    def _initialise_logger(self, logDir, logFileName):
+
+        self.logFilePath = os.path.join(logDir, "{}.log".format(logFileName))
+        self.logger = logging.getLogger(logFileName)
+        self.logger.setLevel(logging.DEBUG)
+        fH = RotatingFileHandler(filename = self.logFilePath, mode = 'a', delay = 0,
+                                 maxBytes = 1024 * 1024, backupCount = 3)
+        fH.setLevel(logging.DEBUG)
+        formatter = logging.Formatter("%(message)s")
+        fH.setFormatter(formatter)
+        self.logger.addHandler(fH)
 
     def shutdown_server(self):
 

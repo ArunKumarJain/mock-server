@@ -14,9 +14,6 @@ def mockWrapper(func):
     @functools.wraps(func)
     def func_wrapper(inst, *args, **kwargs):
 
-        inst.logger.debug("Url: '{}'\nMethod: '{}'\nHeaders: '{}'\ndata: {}\n".
-                          format(request.path, request.method, request.headers, request.get_data()))
-
         responseAttrName = "{0}Response".format(func.__name__)
         codeAttrName = "{0}ResponseCode".format(func.__name__)
         callbackFuncAttrName = "{0}CallbackFunc".format(func.__name__)
@@ -42,6 +39,8 @@ def mockWrapper(func):
             return
 
         if kwargs.get("request"):
+            inst.logger.debug("Url: '{}'\nMethod: '{}'\nHeaders: '{}'\ndata: {}\n".
+                              format(request.path, request.method, request.headers, request.get_data()))
             if hasattr(func, responseAttrName):
                 return json.dumps(getattr(func, responseAttrName)), getattr(func, codeAttrName)
             if hasattr(func, callbackFuncAttrName):

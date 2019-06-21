@@ -40,7 +40,7 @@ def mockWrapper(func):
 
         if kwargs.get("request"):
             inst.logger.debug("Url: '{}'\nMethod: '{}'\nHeaders: '{}'\ndata: {}\n".
-                              format(request.path, request.method, request.headers, request.get_data()))
+                              format(request.url, request.method, request.headers, request.get_data()))
             if hasattr(func, responseAttrName):
                 return json.dumps(getattr(func, responseAttrName)), getattr(func, codeAttrName)
             if hasattr(func, callbackFuncAttrName):

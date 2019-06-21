@@ -1,5 +1,5 @@
 # mock-server
-  A mock server is a standalone application that allows other systems to send the requests to it and responds with the pre-defined set of data or dynamically created data. 
+  It's a standalone application that allows other systems to send the requests to it and responds with the pre-defined set of data or dynamically created data. 
   
   Most of the web applications communicate with external services/APIs almost at every request. During the QA to minimise the external dependencies or to simulate the external services failures we can use mock servers. In short make the external services behave the way we want. The main use cases are,
 

@@ -62,7 +62,7 @@ class MockServer(Thread):
             (int) port: port of the Webserver. 5432
         """
 
-        super().__init__()
+        super(MockServer, self).__init__()
         self._initialise_logger(logDir = logDir, logFileName = logFileName)
         self.port = port
         self.host = host

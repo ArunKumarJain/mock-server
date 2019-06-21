@@ -1,4 +1,6 @@
 import json
+import sys
+sys.path.append(".")
 from mockserver import MockServer, mockWrapper
 import time
 
@@ -6,7 +8,7 @@ class ApiMock(MockServer):
 
     def __init__(self, host = "127.0.0.1", port = 5432):
 
-        super().__init__(host = host, port = port)
+        super(ApiMock, self).__init__(host = host, port = port)
         self.initialise()
 
     @mockWrapper

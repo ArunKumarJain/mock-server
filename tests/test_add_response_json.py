@@ -25,6 +25,13 @@ class TestMockServer(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(["samsung", "apple", "mi"], response.json())
 
+    def test_no_endpoint_registered(self):
+
+        # call an end point which is not registered
+
+        response = requests.get(self.server.url + "/mobiles/models")
+        self.assertEqual(404, response.status_code)
+
     def tearDown(self):
 
         self.server.shutdown_server()

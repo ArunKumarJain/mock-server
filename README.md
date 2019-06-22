@@ -15,10 +15,14 @@
   * add_response_json
   
   mockserver.add_response_json(url = "/mobiles/manufacturers", serializable = ["lg", "apple", "samsung"], methods = ("GET",))
+
+  ![picture alt](https://github.com/ArunKumarJain/mock-server/images/add_response_json.png)
    
    * add_response_callback
 
   mockserver.add_response_callback(url = "/mobiles/manufacturers", callback = callbackMethod, methods = ("GET",))
+
+  ![picture alt](https://github.com/ArunKumarJain/mock-server/images/add_callback_functions.png)
 
 2. Replace the external service URL with the mock server URL in the service that is under test so that requests will come to mock server instead of the external service 
 
